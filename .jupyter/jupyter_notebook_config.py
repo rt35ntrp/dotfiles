@@ -263,7 +263,7 @@ c.NotebookApp.ip = '*'
 #c.NotebookApp.nbserver_extensions = {}
 
 ## The directory to use for notebooks and kernels.
-c.NotebookApp.notebook_dir = '~/workspace'
+c.NotebookApp.notebook_dir = '/Users/owen//workspace'
 
 ## Whether to open in a browser after starting. The specific browser used is
 #  platform dependent and determined by the python standard library `webbrowser`
