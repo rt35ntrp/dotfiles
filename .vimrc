@@ -17,6 +17,13 @@ set smartindent
 set ruler
 set fileencodings=utf8,euc-kr
 
+" 검색시 파일 끝에서 처음으로 되돌리기 안함
+set nows
+" 검색시 대소문자를 구별하지 않음
+set ic
+" 똑똑한 대소문자 구별 기능 사용
+set scs
+
 " 마지막으로 수정된 곳에 커서를 위치함
 au BufReadPost *
 \ if line("'\"") > 0 && line("'\"") <= line("$") |
