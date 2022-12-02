@@ -180,7 +180,6 @@ alias worker='ssh owen@worker'
 alias nipa='ssh ubuntu@14.49.45.243 -p 16022'
 
 # GITHUB
-export GIT_ACCESS_TOKEN='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'
 
 # RUST Compiler
 . "$HOME/.cargo/env"
