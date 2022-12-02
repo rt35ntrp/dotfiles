@@ -74,7 +74,6 @@ plugins=(
   git
   zsh-syntax-highlighting
   zsh-autosuggestions
-  fzf
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -143,7 +142,6 @@ build_prompt() {
 }
 export PATH=/opt/homebrew/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin
 
-
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/Users/owen/conda/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
@@ -168,9 +166,13 @@ if [ -f '/Users/owen/resources/google-cloud-sdk/completion.zsh.inc' ]; then . '/
 
 # Custom alias
 # Change directory & environment
+alias bereview='cd /Users/owen/workspace/bereview'
 alias partner='cd /Users/owen/workspace/bereview/partner'
 alias archive='cd /Users/owen/workspace/archive'
-alias revass='cd /Users/owen/workspace/bereview/review-assistant'
+
+#
+alias mlmlm='cd /Users/owen/workspace/bereview/mlmlm'
+alias revass='cd /Users/owen/workspace/bereview/review-assistant; conda activate revass'
 
 # SSH
 alias oki='ssh rt35ntrp@rt-okinawa'
@@ -178,4 +180,7 @@ alias worker='ssh owen@worker'
 alias nipa='ssh ubuntu@14.49.45.243 -p 16022'
 
 # GITHUB
-export GIT_ACCESS_TOKEN='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'
+export GIT_ACCESS_TOKEN='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'
+
+# RUST Compiler
+. "$HOME/.cargo/env"
