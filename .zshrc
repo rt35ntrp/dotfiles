@@ -173,13 +173,20 @@ alias archive='cd /Users/owen/workspace/archive'
 #
 alias mlmlm='cd /Users/owen/workspace/bereview/mlmlm'
 alias revass='cd /Users/owen/workspace/bereview/review-assistant; conda activate revass'
+alias imal='cd /Users/owen/workspace/bereview/image-models; conda activate base'
+alias airflow='cd /Users/owen/workspace/bereview/airflow'
 
 # SSH
 alias oki='ssh rt35ntrp@rt-okinawa'
 alias worker='ssh owen@worker'
 alias nipa='ssh ubuntu@14.49.45.243 -p 16022'
+alias mpp='gcloud compute ssh partner-mpp-cluster-m --zone asia-northeast3-a'
 
 # GITHUB
+# CANNOT INCLUDE GITHB TOKEN
 
-# RUST Compiler
-. "$HOME/.cargo/env"
+# # RUST Compiler
+# . "$HOME/.cargo/env"
+
+# GNUBIN
+PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
