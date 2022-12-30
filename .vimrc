@@ -17,6 +17,10 @@ set smartindent
 set ruler
 set fileencodings=utf8,euc-kr
 
+set softtabstop=4
+set tabstop=4
+set expandtab
+
 " 검색시 파일 끝에서 처음으로 되돌리기 안함
 set nows
 " 검색시 대소문자를 구별하지 않음
