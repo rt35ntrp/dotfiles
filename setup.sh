@@ -20,7 +20,7 @@ fi
 # 필수 패키지 설치
 # --------------------------
 echo "📦 기본 패키지 설치 중..."
-brew install stow git coreutils zsh fzf exa bat jq gh pyenv pyenv-virtualenv kubernetes-cli helm stern kustomize k9s pipx
+brew install stow git coreutils zsh fzf eza bat jq gh pyenv pyenv-virtualenv kubernetes-cli helm stern kustomize k9s pipx tree
 
 # fzf 키 바인딩/컴플리션 스크립트 설치 (rc 자동 수정 안 함)
 $(brew --prefix)/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
@@ -72,22 +72,44 @@ fi
 # dotfiles stow 적용
 # --------------------------
 echo "🔗 dotfiles 심볼릭 링크 생성 중..."
-for dir in zsh git vim jupyter bin; do
+for dir in zsh git vim jupyter; do
   if [ -d "$dir" ]; then
     echo "➡️  stow $dir"
-    stow "$dir"
+    stow "$dir" --target=$HOME
   fi
 done
+
+echo "🔗 사용자 bin 파일 링크 (~/.local/bin)"
+mkdir -p "$HOME/.local/bin"
+stow -v -t "$HOME/.local" local
+if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc; then
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+fi
 
 # --------------------------
 # GUI 애플리케이션(cask) 설치 (macOS)
 # --------------------------
 if [[ "$OSTYPE" == "darwin"* ]]; then
   echo "📦 GUI 애플리케이션(cask) 설치 중..."
-  brew tap homebrew/cask-fonts
+
+  # homebrew/cask-fonts는 deprecated → tap 제거
   brew install --cask docker visual-studio-code iterm2 rectangle lens \
-      google-chrome slack notion kakaotalk \
-      font-jetbrains-mono-nerd-font font-d2coding
+      cursor slack notion \
+      font-jetbrains-mono-nerd-font
+
+  # D2Coding 폰트 수동 설치
+  echo "🔤 D2Coding 폰트 수동 설치 중..."
+  D2_URL="https://github.com/naver/d2codingfont/releases/download/VER1.3.2/D2Coding-Ver1.3.2-20180524.zip"
+  TMP_D2="$HOME/.tmp_d2coding"
+  
+  mkdir -p "$TMP_D2"
+  curl -L "$D2_URL" -o "$TMP_D2/d2.zip"
+  unzip -o "$TMP_D2/d2.zip" -d "$TMP_D2"
+  mkdir -p "$HOME/Library/Fonts"
+  find "$TMP_D2" -name "*.ttf" -exec cp {} "$HOME/Library/Fonts/" \;
+  rm -rf "$TMP_D2"
+  echo "✅ D2Coding 폰트 설치 완료"
+
   # Docker Desktop 첫 실행 → 권한/리소스 설정을 위해 자동 실행
   if [ -d "/Applications/Docker.app" ]; then
     echo "🐳 Docker Desktop 첫 실행 중... (잠시 기다려 주세요)"
@@ -138,27 +160,30 @@ EOF
   fi
 fi
 
-# --------------------------
-# Poetry 설치 (공식 스크립트)
-# --------------------------
-if ! command -v poetry &>/dev/null; then
-  echo "📦 Poetry 설치 중..."
-  curl -sSL https://install.python-poetry.org | python3 -
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-else
-  echo "✅ Poetry 이미 설치됨: $(poetry --version)"
-fi
 
 # --------------------------
 # Conda 설치 (Miniforge 방식)
 # --------------------------
 if ! command -v conda &>/dev/null; then
   echo "📦 Miniforge (conda) 설치 중..."
-  curl -L -o ~/miniforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
-  bash ~/miniforge.sh -b -p $HOME/miniforge3
-  rm ~/miniforge.sh
-  echo 'export PATH="$HOME/miniforge3/bin:$PATH"' >> ~/.zshrc
-  echo "✅ Miniforge 설치 완료 (터미널 재시작 후 conda 사용 가능)"
+
+  # 이미 디렉토리가 존재하면 생략 또는 업데이트
+  if [[ -d "$HOME/miniforge3" ]]; then
+    echo "⚠️  Miniforge 디렉토리가 이미 존재합니다: $HOME/miniforge3"
+    echo "    기존 설치가 있다고 판단하여 설치를 생략합니다."
+  else
+    curl -L -o ~/miniforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+    bash ~/miniforge.sh -b -p $HOME/miniforge3
+    rm ~/miniforge.sh
+    echo "✅ Miniforge 설치 완료"
+  fi
+
+  # ~/.zshrc에 PATH 추가 (중복 방지)
+  if ! grep -q 'export PATH="$HOME/miniforge3/bin:$PATH"' ~/.zshrc; then
+    echo 'export PATH="$HOME/miniforge3/bin:$PATH"' >> ~/.zshrc
+  fi
+
+  echo "💡 터미널을 재시작하거나 'source ~/.zshrc' 후 conda를 사용할 수 있습니다."
 else
   echo "✅ Conda 이미 설치됨: $(conda --version)"
 fi
@@ -178,14 +203,34 @@ if ! command -v kubectl-krew &>/dev/null; then
     tar zxvf "${KREW}.tar.gz"
     ./${KREW} install krew
   )
-  echo 'export PATH="$HOME/.krew/bin:$PATH"' >> ~/.zshrc
+  # PATH 설정은 한 번만 추가
+  if ! grep -q 'export PATH="$HOME/.krew/bin:$PATH"' ~/.zshrc; then
+    echo 'export PATH="$HOME/.krew/bin:$PATH"' >> ~/.zshrc
+  fi
 fi
 
-# krew 플러그인 기본 세트 설치
+# 현재 세션에서도 바로 쓸 수 있도록
 export PATH="$HOME/.krew/bin:$PATH"
-for plugin in kubectx ns neat tail view-allocations; do
-  kubectl krew list | grep -q "${plugin}" || kubectl krew install "${plugin}"
+
+# krew 플러그인 기본 세트 설치
+KREW_PLUGINS=(
+  ctx              # kubectl context 전환
+  ns               # namespace 전환
+  neat             # 출력 정리
+  tail             # 로그 tailing
+  view-allocations # 리소스 할당 시각화
+)
+
+echo "🔌 krew 플러그인 설치 중..."
+for plugin in "${KREW_PLUGINS[@]}"; do
+  if ! kubectl krew list | grep -q "^${plugin}$"; then
+    echo "➕ installing plugin: $plugin"
+    kubectl krew install "$plugin"
+  else
+    echo "✅ plugin already installed: $plugin"
+  fi
 done
+
 
 # stern, helm 등 brew로 이미 설치됨
 
