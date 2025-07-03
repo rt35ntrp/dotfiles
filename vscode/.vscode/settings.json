@@ -1,0 +1,54 @@
+{
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.formatOnSave": true,
+  "editor.tabSize": 4,
+  "editor.rulers": [88],
+  "editor.minimap.enabled": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  "terminal.integrated.fontFamily": "D2Coding",
+  "terminal.integrated.fontSize": 13,
+  "terminal.integrated.inheritEnv": false,
+
+  "window.zoomLevel": 1,
+
+  // Python
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+
+  // Git / GitLens
+  "git.autofetch": true,
+  "git.suggestSmartCommit": false,
+  "git.openRepositoryInParentFolders": "never",
+  "gitlens.ai.model": "vscode",
+  "gitlens.ai.vscode.model": "copilot:gpt-4o",
+
+  // GitHub Pull Requests / Issues
+  "githubPullRequests.fileListLayout": "flat",
+  "githubPullRequests.pullBranch": "never",
+  "githubIssues.issueBranchTitle": "feature/${issueNumber}-${sanitizedIssueTitle}",
+  "githubIssues.queries": [
+    {
+      "label": "내 문제",
+      "query": "default"
+    },
+    {
+      "label": "생성된 문제",
+      "query": "author:${user} state:open repo:${owner}/${repository} sort:created-desc"
+    },
+    {
+      "label": "최근 문제",
+      "query": "state:open repo:${owner}/${repository} sort:updated-desc"
+    }
+  ],
+
+  // markdown → PDF 변환
+  "markdown-pdf.styles": [
+    "${workspaceFolder}/.vscode/markdown-styles/github-report.css"
+  ],
+  "markdown-pdf.includeDefaultStyles": false,
+  "markdown-pdf.displayHeaderFooter": false,
+  "markdown-pdf.highlightStyle": "github.css",
+  "markdown-preview-enhanced.enablePreviewZenMode": false
+}

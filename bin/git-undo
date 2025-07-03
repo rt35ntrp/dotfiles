@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# git-undo: 마지막 커밋(N)개를 soft reset 하여 변경 내용을 워킹 디렉터리에 보존
+# 사용법: git-undo [N]
+#   N을 생략하면 1(직전 커밋)을 되돌립니다.
+#   예) git-undo 2  # 최근 2개 커밋 취소
+set -e
+
+N=${1:-1}
+
+# git 저장소 여부 확인
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "⚠️  현재 디렉터리는 Git 저장소가 아닙니다." >&2
+  exit 1
+fi
+
+# 커밋 수 유효성 검사
+if ! [[ $N =~ ^[0-9]+$ ]]; then
+  echo "⚠️  인자 N은 양의 정수여야 합니다." >&2
+  exit 1
+fi
+
+# 실제 reset
+echo "↩️  최근 $N개 커밋을 취소합니다 (변경 내용은 보존)."
+git reset --soft HEAD~$N 

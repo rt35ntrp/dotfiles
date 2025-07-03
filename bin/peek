@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# peek: 파일 내용을 자동 인식하여 요약/샘플을 보여주는 지능형 뷰어
+# 사용법: peek <file>
+set -e
+
+FILE="$1"
+[ -z "$FILE" ] && { echo "사용법: peek <file>" >&2; exit 1; }
+[ ! -f "$FILE" ] && { echo "⚠️  파일을 찾을 수 없습니다: $FILE" >&2; exit 1; }
+
+EXT="${FILE##*.}"
+MIME=$(file --brief --mime-type "$FILE")
+SIZE=$(du -h "$FILE" | cut -f1)
+LINES=$(wc -l < "$FILE" 2>/dev/null || echo "-")
+
+echo "📄 파일: $FILE ($SIZE, $MIME, ${LINES:-?} lines)"
+
+case "$EXT" in
+  csv|tsv)
+    DELIM=","; [ "$EXT" = "tsv" ] && DELIM=$'\t'
+    python3 - <<PY "$FILE" "$DELIM" || true
+import sys, csv, itertools, os
+path, delim = sys.argv[1], sys.argv[2].encode().decode('unicode_escape')
+with open(path, newline='') as f:
+    reader = csv.reader(f, delimiter=delim)
+    rows = list(itertools.islice(reader, 6))
+    col_count = len(rows[0]) if rows else 0
+    print(f"행 수(샘플 기반): {len(rows)}+  열 수: {col_count}")
+    print("─ 첫 5줄 ─")
+    for r in rows[:5]:
+        print(', '.join(r)[:120])
+PY
+    ;;
+  json)
+    echo "🔑 최상위 키 목록:"; jq -r 'keys_unsorted[]' "$FILE" | head -20 || true
+    echo "─ 샘플(첫 20줄) ─"; jq '.' "$FILE" | head -20 || head -20 "$FILE"
+    ;;
+  py)
+    echo "🔎 함수/클래스 정의:"; grep -En "^ *(def|class) " "$FILE" | head -20 || true
+    ;;
+  md)
+    echo "📝 Markdown 통계:";
+    H=$(grep -c '^#' "$FILE")
+    W=$(wc -w < "$FILE")
+    echo "헤딩 개수: $H, 단어 수: $W";
+    echo "─ 첫 40줄 ─"; head -40 "$FILE";
+    ;;
+  log|txt)
+    echo "📜 최근 50줄"; tail -50 "$FILE";
+    ;;
+  pdf)
+    if command -v pdfinfo &>/dev/null; then
+      pdfinfo "$FILE" | head -20
+    else
+      echo "pdfinfo 가 설치되지 않았습니다. brew install poppler 로 설치 가능.";
+    fi
+    ;;
+  png|jpg|jpeg|gif)
+    if command -v identify &>/dev/null; then
+      identify "$FILE"
+    else
+      echo "identify (ImageMagick)가 없습니다. brew install imagemagick 로 설치 가능.";
+    fi
+    ;;
+  parquet|pq)
+    # Parquet: pyarrow 사용 시 스키마/행수/샘플 출력
+    python3 - <<'PY' "$FILE" || {
+      echo "⚠️  pyarrow 모듈이 없어 Parquet 미리보기를 건너뜹니다. 'pipx install pyarrow' 혹은 'pip install pyarrow' 후 다시 시도하세요.";
+    }
+import sys, pyarrow.parquet as pq, pandas as pd
+path = sys.argv[1]
+pf = pq.ParquetFile(path)
+print(f"컬럼 수: {len(pf.schema.names)}, 전체 행 수: {pf.metadata.num_rows}")
+df = pq.read_table(path, max_rows=5).to_pandas()
+print("─ 샘플 5줄 ─")
+print(df.to_string(index=False, max_colwidth=30))
+PY
+    ;;
+  *)
+    echo "(특수 핸들러 없음) 첫 40줄:"; head -40 "$FILE";
+    ;;
+esac 

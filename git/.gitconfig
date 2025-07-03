@@ -1,0 +1,9 @@
+[user]
+  name = Songwon Han
+  email = songwon.han@gmail.com
+
+[color]
+  ui = auto
+
+[push]
+  default = current

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# tb: TensorBoard를 편리하게 실행하기 위한 래퍼
+# 사용법: tb [logdir] [--port PORT] [--reload]
+#   logdir 생략 시 현재 디렉터리 하위에서 runs/, logs/*, lightning_logs/ 중 최신 디렉터리를 자동 탐색합니다.
+#   --port PORT : 기본 6006, 사용 중이면 랜덤 포트 선택
+#   --reload    : TensorBoard 프로세스가 이미 있으면 kill 후 재시작
+
+set -euo pipefail
+
+LOGDIR=""
+PORT=6006
+RELOAD=false
+
+# ------------ 인자 파싱 ------------
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --port)
+      PORT="$2"; shift 2;;
+    --reload)
+      RELOAD=true; shift;;
+    *)
+      if [[ -z "$LOGDIR" ]]; then
+        LOGDIR="$1"; shift;
+      else
+        echo "⚠️  인자를 다시 확인하세요: $1" >&2; exit 1;
+      fi;;
+  esac
+done
+
+# ------------ logdir 자동 탐색 ------------
+if [[ -z "$LOGDIR" ]]; then
+  CANDIDATES=(
+    $(find . -type d -maxdepth 2 \( -name 'runs' -o -name 'logs' -o -name 'lightning_logs' \) 2>/dev/null | sort)
+  )
+  if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
+    echo "⚠️  logdir를 찾을 수 없습니다. 인자로 명시하거나 'runs/' 디렉터리를 생성하세요." >&2; exit 1;
+  fi
+  # 가장 최근에 수정된 디렉터리 선택
+  LOGDIR=$(ls -td ${CANDIDATES[@]} | head -1)
+  echo "ℹ️  자동 감지된 logdir: $LOGDIR"
+fi
+
+# ------------ 포트 할당 ------------
+function is_port_free(){ ! lsof -i :$1 &>/dev/null; }
+if ! is_port_free "$PORT"; then
+  echo "⚠️  포트 $PORT 가 사용 중입니다. 자유 포트를 탐색합니다..."
+  for p in {7000..7099}; do
+    if is_port_free "$p"; then PORT="$p"; break; fi
+  done
+  echo "ℹ️  포트 $PORT 사용"
+fi
+
+# ------------ 기존 TensorBoard 종료 ------------
+if $RELOAD; then
+  pkill -f "tensorboard.*--logdir $LOGDIR" 2>/dev/null || true
+fi
+
+# ------------ TensorBoard 실행 ------------
+command -v tensorboard >/dev/null 2>&1 || { echo "tensorboard 명령을 찾을 수 없습니다. 'pip install tensorboard' 후 다시 시도하세요." >&2; exit 1; }
+
+echo "🚀 TensorBoard 시작: http://localhost:$PORT (logdir=$LOGDIR)"
+
+tensorboard --logdir "$LOGDIR" --port "$PORT" --host 0.0.0.0 "$@" &
+PID=$!
+
+echo "(Ctrl+C 로 중지, PID=$PID)"
+wait $PID 
