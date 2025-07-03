@@ -5,6 +5,10 @@
   "editor.rulers": [88],
   "editor.minimap.enabled": false,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.fontFamily": "'D2CodingLigarature Nerd Font Mono', 'D2Coding'",
+
+  // Terminal
+  "terminal.integrated.fontFamily": "'D2CodingLigarature Nerd Font Mono', 'D2Coding'",
 
   "terminal.integrated.fontFamily": "D2Coding",
   "terminal.integrated.fontSize": 13,

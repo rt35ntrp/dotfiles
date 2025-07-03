@@ -102,3 +102,28 @@ fi
 
 # 히스토리 타임스탬프
 # HIST_STAMPS="yyyy-mm-dd"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+export PATH="$HOME/.local/bin:$PATH"
+
+# --------------------------
+# 🌈 유용한 CLI alias 및 설정
+# --------------------------
+
+# eza: modern ls
+alias ls='eza'
+alias ll='eza -al'
+alias lt='eza --tree --level=2'
+alias li='eza --icons'
+alias lli='eza -al --icons'
+
+# bat: better cat
+alias cat='bat --style=plain'
+alias bathelp='bat --paging=always --language=help'
+
+# fzf: fuzzy finder 설정 (history 검색 포함)
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
+

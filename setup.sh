@@ -86,6 +86,12 @@ if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc; then
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 fi
 
+echo "🔗 VSCode 사용자 Settings 파일 링크"
+ln -sf "$(pwd)/vscode/settings.json" \
+  "$HOME/Library/Application Support/Code/User/settings.json"
+ln -sf "$(pwd)/vscode/settings.json" \
+  "$HOME/Library/Application Support/Cursor/User/settings.json"
+
 # --------------------------
 # GUI 애플리케이션(cask) 설치 (macOS)
 # --------------------------
